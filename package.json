@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "my-new-component": "file:../my-new-component",
-    "sirv-cli": "^1.0.0",
-    "svelte-final-form": "file:../../svelte-final-form"
+    "sirv-cli": "^1.0.0"
   }
 }
