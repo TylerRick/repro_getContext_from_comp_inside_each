@@ -16,6 +16,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "my-new-component": "file:../my-new-component",
     "sirv-cli": "^1.0.0"
   }
 }
