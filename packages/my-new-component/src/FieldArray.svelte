@@ -2,8 +2,11 @@
   console.log('my-new-component FieldArray')
   let names = ['a']
 
-  console.log('synchronously changing names to [a, b]')
-  names = ['a', 'b']
+  const handleClick = () => {
+    console.log('changing names to [a, b] from event callback')
+    names = ['a', 'b']
+  }
 </script>
 
+<button on:click={handleClick}>Blow up</button>
 <slot names={names} />

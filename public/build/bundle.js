@@ -421,8 +421,18 @@ var app = (function () {
     function detach$1(node) {
         node.parentNode.removeChild(node);
     }
+    function element$1(name) {
+        return document.createElement(name);
+    }
     function text$1(data) {
         return document.createTextNode(data);
+    }
+    function space() {
+        return text$1(' ');
+    }
+    function listen(node, event, handler, options) {
+        node.addEventListener(event, handler, options);
+        return () => node.removeEventListener(event, handler, options);
     }
     function children$1(element) {
         return Array.from(element.childNodes);
@@ -645,25 +655,40 @@ var app = (function () {
     const get_default_slot_context = ctx => ({ names: /*names*/ ctx[0] });
 
     function create_fragment$1(ctx) {
+    	let button;
+    	let t1;
     	let current;
-    	const default_slot_template = /*#slots*/ ctx[2].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[1], get_default_slot_context);
+    	let mounted;
+    	let dispose;
+    	const default_slot_template = /*#slots*/ ctx[3].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], get_default_slot_context);
 
     	return {
     		c() {
+    			button = element$1("button");
+    			button.textContent = "Blow up";
+    			t1 = space();
     			if (default_slot) default_slot.c();
     		},
     		m(target, anchor) {
+    			insert$1(target, button, anchor);
+    			insert$1(target, t1, anchor);
+
     			if (default_slot) {
     				default_slot.m(target, anchor);
     			}
 
     			current = true;
+
+    			if (!mounted) {
+    				dispose = listen(button, "click", /*handleClick*/ ctx[1]);
+    				mounted = true;
+    			}
     		},
     		p(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope, names*/ 3) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[1], dirty, get_default_slot_changes, get_default_slot_context);
+    				if (default_slot.p && dirty & /*$$scope, names*/ 5) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[2], dirty, get_default_slot_changes, get_default_slot_context);
     				}
     			}
     		},
@@ -677,7 +702,11 @@ var app = (function () {
     			current = false;
     		},
     		d(detaching) {
+    			if (detaching) detach$1(button);
+    			if (detaching) detach$1(t1);
     			if (default_slot) default_slot.d(detaching);
+    			mounted = false;
+    			dispose();
     		}
     	};
     }
@@ -686,14 +715,17 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	console.log("my-new-component FieldArray");
     	let names = ["a"];
-    	console.log("synchronously changing names to [a, b]");
-    	names = ["a", "b"];
 
-    	$$self.$$set = $$props => {
-    		if ("$$scope" in $$props) $$invalidate(1, $$scope = $$props.$$scope);
+    	const handleClick = () => {
+    		console.log("changing names to [a, b] from event callback");
+    		$$invalidate(0, names = ["a", "b"]);
     	};
 
-    	return [names, $$scope, slots];
+    	$$self.$$set = $$props => {
+    		if ("$$scope" in $$props) $$invalidate(2, $$scope = $$props.$$scope);
+    	};
+
+    	return [names, handleClick, $$scope, slots];
     }
 
     class FieldArray extends SvelteComponent$1 {
