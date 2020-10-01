@@ -16,7 +16,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
-    "my-new-component": "file:packages/my-new-component",
+    "my-new-component": "https://github.com/TylerRick/repro_getContext_from_comp_inside_each_component.git#1a7a01b",
     "sirv-cli": "^1.0.0"
   }
 }
