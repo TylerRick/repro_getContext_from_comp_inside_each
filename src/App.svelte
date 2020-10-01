@@ -1,19 +1,20 @@
 <script>
-import { FieldArray } from "my-new-component";
+  import { UsesContext } from "my-new-component";
 
-// Using this results in error:
-//   Uncaught (in promise) Error: Function called outside component initialization
-import { UsesContext } from "my-new-component";
+  let names = ['a']
 
-// But changing it to use a copy of the exact some component located in local app works without any error:
-// import UsesContext from "./UsesContext.svelte";
+  const callback = () => {
+    names = ['a', 'b']
+    console.log('changing names variable from async callback')
+    // console.log(`FieldArray fieldState for ${name}:`, fields.names())
+  }
+
+  setTimeout(callback, 1000);
 </script>
 
-<FieldArray let:names>
-  {#each names as name, i}
-    <div>
-      {name}:
-      <UsesContext />
-    </div>
-  {/each}
-</FieldArray>
+{#each names as name, i}
+  <div>
+    {name}:
+    <UsesContext />
+  </div>
+{/each}
