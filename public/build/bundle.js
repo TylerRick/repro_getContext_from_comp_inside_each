@@ -68,17 +68,6 @@ var app = (function () {
     function set_current_component(component) {
         current_component = component;
     }
-    function get_current_component() {
-        if (!current_component)
-            throw new Error(`Function called outside component initialization`);
-        return current_component;
-    }
-    function setContext(key, context) {
-        get_current_component().$$.context.set(key, context);
-    }
-    function getContext(key) {
-        return get_current_component().$$.context.get(key);
-    }
 
     const dirty_components = [];
     const binding_callbacks = [];
@@ -434,6 +423,17 @@ var app = (function () {
     let current_component$1;
     function set_current_component$1(component) {
         current_component$1 = component;
+    }
+    function get_current_component() {
+        if (!current_component$1)
+            throw new Error(`Function called outside component initialization`);
+        return current_component$1;
+    }
+    function setContext(key, context) {
+        get_current_component().$$.context.set(key, context);
+    }
+    function getContext(key) {
+        return get_current_component().$$.context.get(key);
     }
 
     const dirty_components$1 = [];

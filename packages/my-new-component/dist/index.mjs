@@ -1,5 +1,3 @@
-import { setContext, getContext } from 'svelte';
-
 function noop() { }
 function assign(tar, src) {
     // @ts-ignore
@@ -77,6 +75,17 @@ function children(element) {
 let current_component;
 function set_current_component(component) {
     current_component = component;
+}
+function get_current_component() {
+    if (!current_component)
+        throw new Error(`Function called outside component initialization`);
+    return current_component;
+}
+function setContext(key, context) {
+    get_current_component().$$.context.set(key, context);
+}
+function getContext(key) {
+    return get_current_component().$$.context.get(key);
 }
 
 const dirty_components = [];
