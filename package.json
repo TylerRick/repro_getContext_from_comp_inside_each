@@ -16,6 +16,8 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "@urql/svelte": "file:../../../urql/packages/svelte-urql",
+    "graphql": "^15.3.0",
     "my-new-component": "file:../my-new-component",
     "sirv-cli": "^1.0.0"
   }
