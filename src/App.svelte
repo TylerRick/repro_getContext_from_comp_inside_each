@@ -10,6 +10,10 @@ import { UsesContext } from "my-new-component";
 </script>
 
 <FieldArray let:names>
-  <div>{names}</div>
-  <UsesContext />
+  {#each names as name, i}
+    <div>
+      {name}:
+      <UsesContext />
+    </div>
+  {/each}
 </FieldArray>

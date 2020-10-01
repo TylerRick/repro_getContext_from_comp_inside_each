@@ -37,6 +37,12 @@ var app = (function () {
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
     function element(name) {
         return document.createElement(name);
     }
@@ -45,6 +51,9 @@ var app = (function () {
     }
     function space() {
         return text(' ');
+    }
+    function empty() {
+        return text('');
     }
     function children(element) {
         return Array.from(element.childNodes);
@@ -136,6 +145,19 @@ var app = (function () {
     }
     const outroing = new Set();
     let outros;
+    function group_outros() {
+        outros = {
+            r: 0,
+            c: [],
+            p: outros // parent group
+        };
+    }
+    function check_outros() {
+        if (!outros.r) {
+            run_all(outros.c);
+        }
+        outros = outros.p;
+    }
     function transition_in(block, local) {
         if (block && block.i) {
             outroing.delete(block);
@@ -301,6 +323,15 @@ var app = (function () {
             return;
         dispatch_dev("SvelteDOMSetData", { node: text, data });
         text.data = data;
+    }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
     }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
@@ -731,13 +762,21 @@ var app = (function () {
 
     const file = "src/App.svelte";
 
-    // (12:0) <FieldArray let:names>
-    function create_default_slot(ctx) {
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[1] = list[i];
+    	child_ctx[3] = i;
+    	return child_ctx;
+    }
+
+    // (13:2) {#each names as name, i}
+    function create_each_block(ctx) {
     	let div;
-    	let t0_value = /*names*/ ctx[0] + "";
+    	let t0_value = /*name*/ ctx[1] + "";
     	let t0;
     	let t1;
     	let usescontext;
+    	let t2;
     	let current;
     	usescontext = new UsesContext({ $$inline: true });
 
@@ -745,19 +784,21 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			t0 = text(t0_value);
-    			t1 = space();
+    			t1 = text(":\n      ");
     			create_component(usescontext.$$.fragment);
-    			add_location(div, file, 12, 2, 415);
+    			t2 = space();
+    			add_location(div, file, 13, 4, 444);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t0);
-    			insert_dev(target, t1, anchor);
-    			mount_component(usescontext, target, anchor);
+    			append_dev(div, t1);
+    			mount_component(usescontext, div, null);
+    			append_dev(div, t2);
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if ((!current || dirty & /*names*/ 1) && t0_value !== (t0_value = /*names*/ ctx[0] + "")) set_data_dev(t0, t0_value);
+    			if ((!current || dirty & /*names*/ 1) && t0_value !== (t0_value = /*name*/ ctx[1] + "")) set_data_dev(t0, t0_value);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -770,8 +811,103 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
-    			if (detaching) detach_dev(t1);
-    			destroy_component(usescontext, detaching);
+    			destroy_component(usescontext);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(13:2) {#each names as name, i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (12:0) <FieldArray let:names>
+    function create_default_slot(ctx) {
+    	let each_1_anchor;
+    	let current;
+    	let each_value = /*names*/ ctx[0];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*names*/ 1) {
+    				each_value = /*names*/ ctx[0];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(each_1_anchor);
     		}
     	};
 
@@ -818,7 +954,7 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			const fieldarray_changes = {};
 
-    			if (dirty & /*$$scope, names*/ 3) {
+    			if (dirty & /*$$scope, names*/ 17) {
     				fieldarray_changes.$$scope = { dirty, ctx };
     			}
 
