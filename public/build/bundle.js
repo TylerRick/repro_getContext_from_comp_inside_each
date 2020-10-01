@@ -4,6 +4,12 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    function assign(tar, src) {
+        // @ts-ignore
+        for (const k in src)
+            tar[k] = src[k];
+        return tar;
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -27,6 +33,42 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
+    function create_slot(definition, ctx, $$scope, fn) {
+        if (definition) {
+            const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
+            return definition[0](slot_ctx);
+        }
+    }
+    function get_slot_context(definition, ctx, $$scope, fn) {
+        return definition[1] && fn
+            ? assign($$scope.ctx.slice(), definition[1](fn(ctx)))
+            : $$scope.ctx;
+    }
+    function get_slot_changes(definition, $$scope, dirty, fn) {
+        if (definition[2] && fn) {
+            const lets = definition[2](fn(dirty));
+            if ($$scope.dirty === undefined) {
+                return lets;
+            }
+            if (typeof lets === 'object') {
+                const merged = [];
+                const len = Math.max($$scope.dirty.length, lets.length);
+                for (let i = 0; i < len; i += 1) {
+                    merged[i] = $$scope.dirty[i] | lets[i];
+                }
+                return merged;
+            }
+            return $$scope.dirty | lets;
+        }
+        return $$scope.dirty;
+    }
+    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
+        const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+        if (slot_changes) {
+            const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
+            slot.p(slot_context, slot_changes);
+        }
+    }
 
     function append(target, node) {
         target.appendChild(node);
@@ -49,8 +91,15 @@ var app = (function () {
     function text(data) {
         return document.createTextNode(data);
     }
+    function space() {
+        return text(' ');
+    }
     function empty() {
         return text('');
+    }
+    function listen(node, event, handler, options) {
+        node.addEventListener(event, handler, options);
+        return () => node.removeEventListener(event, handler, options);
     }
     function children(element) {
         return Array.from(element.childNodes);
@@ -354,301 +403,6 @@ var app = (function () {
         $inject_state() { }
     }
 
-    function noop$1() { }
-    function assign(tar, src) {
-        // @ts-ignore
-        for (const k in src)
-            tar[k] = src[k];
-        return tar;
-    }
-    function run$1(fn) {
-        return fn();
-    }
-    function blank_object$1() {
-        return Object.create(null);
-    }
-    function run_all$1(fns) {
-        fns.forEach(run$1);
-    }
-    function is_function$1(thing) {
-        return typeof thing === 'function';
-    }
-    function safe_not_equal$1(a, b) {
-        return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
-    }
-    function is_empty$1(obj) {
-        return Object.keys(obj).length === 0;
-    }
-    function create_slot(definition, ctx, $$scope, fn) {
-        if (definition) {
-            const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
-            return definition[0](slot_ctx);
-        }
-    }
-    function get_slot_context(definition, ctx, $$scope, fn) {
-        return definition[1] && fn
-            ? assign($$scope.ctx.slice(), definition[1](fn(ctx)))
-            : $$scope.ctx;
-    }
-    function get_slot_changes(definition, $$scope, dirty, fn) {
-        if (definition[2] && fn) {
-            const lets = definition[2](fn(dirty));
-            if ($$scope.dirty === undefined) {
-                return lets;
-            }
-            if (typeof lets === 'object') {
-                const merged = [];
-                const len = Math.max($$scope.dirty.length, lets.length);
-                for (let i = 0; i < len; i += 1) {
-                    merged[i] = $$scope.dirty[i] | lets[i];
-                }
-                return merged;
-            }
-            return $$scope.dirty | lets;
-        }
-        return $$scope.dirty;
-    }
-    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
-        const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
-        if (slot_changes) {
-            const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
-            slot.p(slot_context, slot_changes);
-        }
-    }
-    function insert$1(target, node, anchor) {
-        target.insertBefore(node, anchor || null);
-    }
-    function detach$1(node) {
-        node.parentNode.removeChild(node);
-    }
-    function element$1(name) {
-        return document.createElement(name);
-    }
-    function text$1(data) {
-        return document.createTextNode(data);
-    }
-    function space() {
-        return text$1(' ');
-    }
-    function listen(node, event, handler, options) {
-        node.addEventListener(event, handler, options);
-        return () => node.removeEventListener(event, handler, options);
-    }
-    function children$1(element) {
-        return Array.from(element.childNodes);
-    }
-
-    let current_component$1;
-    function set_current_component$1(component) {
-        current_component$1 = component;
-    }
-
-    const dirty_components$1 = [];
-    const binding_callbacks$1 = [];
-    const render_callbacks$1 = [];
-    const flush_callbacks$1 = [];
-    const resolved_promise$1 = Promise.resolve();
-    let update_scheduled$1 = false;
-    function schedule_update$1() {
-        if (!update_scheduled$1) {
-            update_scheduled$1 = true;
-            resolved_promise$1.then(flush$1);
-        }
-    }
-    function add_render_callback$1(fn) {
-        render_callbacks$1.push(fn);
-    }
-    let flushing$1 = false;
-    const seen_callbacks$1 = new Set();
-    function flush$1() {
-        if (flushing$1)
-            return;
-        flushing$1 = true;
-        do {
-            // first, call beforeUpdate functions
-            // and update components
-            for (let i = 0; i < dirty_components$1.length; i += 1) {
-                const component = dirty_components$1[i];
-                set_current_component$1(component);
-                update$1(component.$$);
-            }
-            set_current_component$1(null);
-            dirty_components$1.length = 0;
-            while (binding_callbacks$1.length)
-                binding_callbacks$1.pop()();
-            // then, once components are updated, call
-            // afterUpdate functions. This may cause
-            // subsequent updates...
-            for (let i = 0; i < render_callbacks$1.length; i += 1) {
-                const callback = render_callbacks$1[i];
-                if (!seen_callbacks$1.has(callback)) {
-                    // ...so guard against infinite loops
-                    seen_callbacks$1.add(callback);
-                    callback();
-                }
-            }
-            render_callbacks$1.length = 0;
-        } while (dirty_components$1.length);
-        while (flush_callbacks$1.length) {
-            flush_callbacks$1.pop()();
-        }
-        update_scheduled$1 = false;
-        flushing$1 = false;
-        seen_callbacks$1.clear();
-    }
-    function update$1($$) {
-        if ($$.fragment !== null) {
-            $$.update();
-            run_all$1($$.before_update);
-            const dirty = $$.dirty;
-            $$.dirty = [-1];
-            $$.fragment && $$.fragment.p($$.ctx, dirty);
-            $$.after_update.forEach(add_render_callback$1);
-        }
-    }
-    const outroing$1 = new Set();
-    let outros$1;
-    function transition_in$1(block, local) {
-        if (block && block.i) {
-            outroing$1.delete(block);
-            block.i(local);
-        }
-    }
-    function transition_out$1(block, local, detach, callback) {
-        if (block && block.o) {
-            if (outroing$1.has(block))
-                return;
-            outroing$1.add(block);
-            outros$1.c.push(() => {
-                outroing$1.delete(block);
-                if (callback) {
-                    if (detach)
-                        block.d(1);
-                    callback();
-                }
-            });
-            block.o(local);
-        }
-    }
-    function mount_component$1(component, target, anchor) {
-        const { fragment, on_mount, on_destroy, after_update } = component.$$;
-        fragment && fragment.m(target, anchor);
-        // onMount happens before the initial afterUpdate
-        add_render_callback$1(() => {
-            const new_on_destroy = on_mount.map(run$1).filter(is_function$1);
-            if (on_destroy) {
-                on_destroy.push(...new_on_destroy);
-            }
-            else {
-                // Edge case - component was destroyed immediately,
-                // most likely as a result of a binding initialising
-                run_all$1(new_on_destroy);
-            }
-            component.$$.on_mount = [];
-        });
-        after_update.forEach(add_render_callback$1);
-    }
-    function destroy_component$1(component, detaching) {
-        const $$ = component.$$;
-        if ($$.fragment !== null) {
-            run_all$1($$.on_destroy);
-            $$.fragment && $$.fragment.d(detaching);
-            // TODO null out other refs, including component.$$ (but need to
-            // preserve final state?)
-            $$.on_destroy = $$.fragment = null;
-            $$.ctx = [];
-        }
-    }
-    function make_dirty$1(component, i) {
-        if (component.$$.dirty[0] === -1) {
-            dirty_components$1.push(component);
-            schedule_update$1();
-            component.$$.dirty.fill(0);
-        }
-        component.$$.dirty[(i / 31) | 0] |= (1 << (i % 31));
-    }
-    function init$1(component, options, instance, create_fragment, not_equal, props, dirty = [-1]) {
-        const parent_component = current_component$1;
-        set_current_component$1(component);
-        const prop_values = options.props || {};
-        const $$ = component.$$ = {
-            fragment: null,
-            ctx: null,
-            // state
-            props,
-            update: noop$1,
-            not_equal,
-            bound: blank_object$1(),
-            // lifecycle
-            on_mount: [],
-            on_destroy: [],
-            before_update: [],
-            after_update: [],
-            context: new Map(parent_component ? parent_component.$$.context : []),
-            // everything else
-            callbacks: blank_object$1(),
-            dirty,
-            skip_bound: false
-        };
-        let ready = false;
-        $$.ctx = instance
-            ? instance(component, prop_values, (i, ret, ...rest) => {
-                const value = rest.length ? rest[0] : ret;
-                if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-                    if (!$$.skip_bound && $$.bound[i])
-                        $$.bound[i](value);
-                    if (ready)
-                        make_dirty$1(component, i);
-                }
-                return ret;
-            })
-            : [];
-        $$.update();
-        ready = true;
-        run_all$1($$.before_update);
-        // `false` as a special case of no DOM component
-        $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
-        if (options.target) {
-            if (options.hydrate) {
-                const nodes = children$1(options.target);
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                $$.fragment && $$.fragment.l(nodes);
-                nodes.forEach(detach$1);
-            }
-            else {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                $$.fragment && $$.fragment.c();
-            }
-            if (options.intro)
-                transition_in$1(component.$$.fragment);
-            mount_component$1(component, options.target, options.anchor);
-            flush$1();
-        }
-        set_current_component$1(parent_component);
-    }
-    class SvelteComponent$1 {
-        $destroy() {
-            destroy_component$1(this, 1);
-            this.$destroy = noop$1;
-        }
-        $on(type, callback) {
-            const callbacks = (this.$$.callbacks[type] || (this.$$.callbacks[type] = []));
-            callbacks.push(callback);
-            return () => {
-                const index = callbacks.indexOf(callback);
-                if (index !== -1)
-                    callbacks.splice(index, 1);
-            };
-        }
-        $set($$props) {
-            if (this.$$set && !is_empty$1($$props)) {
-                this.$$.skip_bound = true;
-                this.$$set($$props);
-                this.$$.skip_bound = false;
-            }
-        }
-    }
-
     /* src/FieldArray.svelte generated by Svelte v3.29.0 */
 
     const get_default_slot_changes = dirty => ({ names: dirty & /*names*/ 1 });
@@ -665,14 +419,14 @@ var app = (function () {
 
     	return {
     		c() {
-    			button = element$1("button");
+    			button = element("button");
     			button.textContent = "Blow up";
     			t1 = space();
     			if (default_slot) default_slot.c();
     		},
     		m(target, anchor) {
-    			insert$1(target, button, anchor);
-    			insert$1(target, t1, anchor);
+    			insert(target, button, anchor);
+    			insert(target, t1, anchor);
 
     			if (default_slot) {
     				default_slot.m(target, anchor);
@@ -694,16 +448,16 @@ var app = (function () {
     		},
     		i(local) {
     			if (current) return;
-    			transition_in$1(default_slot, local);
+    			transition_in(default_slot, local);
     			current = true;
     		},
     		o(local) {
-    			transition_out$1(default_slot, local);
+    			transition_out(default_slot, local);
     			current = false;
     		},
     		d(detaching) {
-    			if (detaching) detach$1(button);
-    			if (detaching) detach$1(t1);
+    			if (detaching) detach(button);
+    			if (detaching) detach(t1);
     			if (default_slot) default_slot.d(detaching);
     			mounted = false;
     			dispose();
@@ -728,10 +482,10 @@ var app = (function () {
     	return [names, handleClick, $$scope, slots];
     }
 
-    class FieldArray extends SvelteComponent$1 {
+    class FieldArray extends SvelteComponent {
     	constructor(options) {
     		super();
-    		init$1(this, options, instance, create_fragment$1, safe_not_equal$1, {});
+    		init(this, options, instance, create_fragment$1, safe_not_equal, {});
     	}
     }
 
@@ -742,16 +496,16 @@ var app = (function () {
 
     	return {
     		c() {
-    			t = text$1(/*context*/ ctx[0]);
+    			t = text(/*context*/ ctx[0]);
     		},
     		m(target, anchor) {
-    			insert$1(target, t, anchor);
+    			insert(target, t, anchor);
     		},
-    		p: noop$1,
-    		i: noop$1,
-    		o: noop$1,
+    		p: noop,
+    		i: noop,
+    		o: noop,
     		d(detaching) {
-    			if (detaching) detach$1(t);
+    			if (detaching) detach(t);
     		}
     	};
     }
@@ -771,10 +525,10 @@ var app = (function () {
     	return [context];
     }
 
-    class UsesContext extends SvelteComponent$1 {
+    class UsesContext extends SvelteComponent {
     	constructor(options) {
     		super();
-    		init$1(this, options, instance$1, create_fragment$2, safe_not_equal$1, {});
+    		init(this, options, instance$1, create_fragment$2, safe_not_equal, {});
     	}
     }
 

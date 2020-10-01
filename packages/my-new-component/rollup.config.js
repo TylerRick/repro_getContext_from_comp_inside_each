@@ -8,11 +8,7 @@ const name = pkg.name
 	.replace(/-\w/g, m => m[1].toUpperCase());
 
 export default {
-  // Commenting out this line causes the error to go away by causing
-  // svelte lib to be included inline in dist/index.mjs instead of imported:
-  // -import { setContext, getContext } from 'svelte';
-  // +function setContext(key, context) { …
-  external: ['svelte'],
+  external: ['svelte/internal', 'svelte'],
 	input: 'src/index.js',
 	output: [
 		{ file: pkg.module, 'format': 'es' },
