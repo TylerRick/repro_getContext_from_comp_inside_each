@@ -358,13 +358,13 @@ function create_fragment$1(ctx) {
 
 function instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
-	console.log("my-new-component  FieldArray");
+	console.log("my-new-component FieldArray");
 	let names = ["a"];
 
 	const callback = () => {
 		$$invalidate(0, names = ["a", "b"]);
 		console.log("changing names variable from async callback");
-	}; // console.log(`FieldArray fieldState for ${name}:`, fields.names())
+	};
 
 	setTimeout(callback, 1000);
 

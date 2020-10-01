@@ -687,13 +687,13 @@ var app = (function () {
 
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	console.log("my-new-component  FieldArray");
+    	console.log("my-new-component FieldArray");
     	let names = ["a"];
 
     	const callback = () => {
     		$$invalidate(0, names = ["a", "b"]);
     		console.log("changing names variable from async callback");
-    	}; // console.log(`FieldArray fieldState for ${name}:`, fields.names())
+    	};
 
     	setTimeout(callback, 1000);
 
@@ -787,7 +787,7 @@ var app = (function () {
     			t1 = text(":\n      ");
     			create_component(usescontext.$$.fragment);
     			t2 = space();
-    			add_location(div, file, 13, 4, 444);
+    			add_location(div, file, 13, 4, 456);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
