@@ -1013,9 +1013,7 @@ var app = (function () {
     }
 
     const app = new App({
-    	target: document.body,
-    	props: {
-    	}
+      target: document.body
     });
 
     return app;
