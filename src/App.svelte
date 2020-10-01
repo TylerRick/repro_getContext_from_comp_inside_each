@@ -1,6 +1,5 @@
 <script>
-// import { FieldArray } from "my-new-component";
-import FieldArray from "./FieldArray.svelte";
+import { FieldArray } from "my-new-component";
 
 // Using this results in error:
 //   Uncaught (in promise) Error: Function called outside component initialization
