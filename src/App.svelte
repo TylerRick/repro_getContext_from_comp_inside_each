@@ -1,7 +1,6 @@
 <script>
 import { FieldArray } from "my-new-component";
-// import { UsesContext } from "my-new-component";
-import { UsesContext } from "@urql/svelte";
+import { UsesContext } from "my-new-component";
 </script>
 
 <FieldArray let:names>
