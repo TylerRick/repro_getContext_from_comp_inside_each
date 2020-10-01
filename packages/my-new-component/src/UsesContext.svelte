@@ -12,4 +12,4 @@
   setContext(key, 'context')
   let context = getContext(key)
 </script>
-UsesContext: {context}
+{context}

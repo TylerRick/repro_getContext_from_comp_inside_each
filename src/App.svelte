@@ -11,9 +11,6 @@
 
 <FieldArray let:names>
   {#each names as name, i}
-    <div>
-      {name}:
-      <UsesContext />
-    </div>
+    <div>{name}: <UsesContext /></div>
   {/each}
 </FieldArray>

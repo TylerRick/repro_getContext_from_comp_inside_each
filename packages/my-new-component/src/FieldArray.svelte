@@ -2,12 +2,10 @@
   console.log('my-new-component FieldArray')
   let names = ['a']
 
-  const callback = () => {
+  setTimeout(() => {
+    console.log('changing names to [a, b] from async callback')
     names = ['a', 'b']
-    console.log('changing names variable from async callback')
-  }
-
-  setTimeout(callback, 1000);
+  }, 1000);
 </script>
 
 <slot names={names} />
