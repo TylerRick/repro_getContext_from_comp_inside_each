@@ -360,14 +360,8 @@ function instance($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	console.log("my-new-component FieldArray");
 	let names = ["a"];
-
-	setTimeout(
-		() => {
-			console.log("changing names to [a, b] from async callback");
-			$$invalidate(0, names = ["a", "b"]);
-		},
-		1000
-	);
+	console.log("synchronously changing names to [a, b]");
+	names = ["a", "b"];
 
 	$$self.$$set = $$props => {
 		if ("$$scope" in $$props) $$invalidate(1, $$scope = $$props.$$scope);
